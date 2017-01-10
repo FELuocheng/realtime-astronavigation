@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="format-detection" content="telephone=no"/>
+        <meta name="format-detection" content="email=no"/>
+        <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" name="viewport">
+        <title>WebSocket多人小游戏</title>
+        <link rel="stylesheet" href="./bootstrap/css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="./style/style.css" />
+    </head>
+    <body>
+        <div id="loginbox">
+            <span>
+                请先输入你的昵称
+            </span>
+            <div class="input-group">
+                <input type="text" style="width:180px;" class="form-control" placeholder="请输入用户名" id="username" name="username" />
+				<input type="button" style="width:50px;" class="btn btn-primary" value="提交" onclick="CHAT.usernameSubmit();"/>
+            </div>
+        </div>
+        <div id="gamebox" style="display:none;">
+            <div class="game-top">
+                <div style="line-height: 28px;color:#fff;">
+                    <span style="text-align:left;margin-left:10px;">WebSocket多人小游戏</span>
+                    <span style="float:right; margin-right:10px;"><span id="showusername"></span> | 
+					<a href="javascript:;" onclick="CHAT.logout()" style="color:#fff;">退出</a></span>
+                </div>
+            </div>
+            <div class="panel">
+                <header class="htmleaf-header">
+                    <h5>HTML5 canvas websocket小游戏<!--  <span>A Interesting HTML5 websocket Game</span> --></h5>
+                </header>
+                <p class="profit">
+                    $<span>0</span>
+                </p>
+                <p><strong>WASD</strong> or &uarr; &darr; &larr; &rarr; to move</p>
+            </div>
+            <div id="chatbox">
+                <a class="left-btn"><span></span></a>
+                <div id="chat">
+                    <div id="message" class="message">
+                        <div id="onlinecount" style="background:#EFEFF4; font-size:12px; margin-top:10px; margin-left:10px; color:#666;">
+                        </div>
+                    </div>
+                    <div class="input-box">
+                        <div class="input">
+                            <input type="text" class="form-control" maxlength="140" placeholder="请输入聊天内容" id="content" name="content">
+                        </div>
+                        <div class="action">
+                            <button type="button" id="mjr_send" onclick="CHAT.submit();">发送</button>
+                        </div>
+
+                        <div style="font-size: 12px;float:left;position: absolute;width:100%;top:45px;left:10px">
+						<p><a href="https://github.com/encodingForBetterWorld" target="_blank">源码已上传至Github~</a></p>
+						<!-- <p>教程：<a href="#" target="_blank">http://www.plhwin.com/2014/05/28/nodejs-socketio/</a></p>
+                        	<p>源码：<a href="#" target="_blank">https://github.com/plhwin/nodejs-socketio-chat</a></p>
+                        </div> -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript" src="./js/jquery-3.0.0.min.js"></script>
+        <script src="./bootstrap/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="./js/widget.js"></script>
+        <script type="text/javascript" src="./js/client.js"></script>
+        <script type="text/javascript" src="./js/game.js"></script>
+        <script type="text/javascript" src="./js/sketch.min.js"></script>
+        <!--[if lt IE 8]><script src="./js/json3.min.js"></script><![endif]-->
+        <script src="./js/socket.io-client/dist/socket.io.js"></script>
+        <script type="text/javascript">
+            $(function() {
+                $('.left-btn').leftBtnAnimate({
+                    target: $('#chatbox'),
+                    toggleClass: 'right-btn span'
+                })
+            })
+        </script>
+    </body>
+</html>
