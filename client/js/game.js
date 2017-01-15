@@ -272,15 +272,32 @@
     EffectUtil={
         //绘制撞击特效
         drawHit:function (ctx) {
-            ctx.hits.forEach(function (hit) {
+            if(!$.isEmptyObject(ctx.hit)){
+                //画冲击波
                 ctx.save();
-                ctx.beginPath();
-                ctx.translate(hit.dx,hit.dy);
-                var star=new Image();
-                star.src="./assets/spark.png"
-                ctx.drawImage(star,0,0,30,30);
+                ctx.lineWidth = 8;
+                ctx.strokeStyle = '#ffffff';
+                ctx.hit.explodes.forEach(function (explode) {
+                    if(explode.isShow){
+                        ctx.beginPath();
+                        ctx.arc(explode.dx,explode.dy,explode.radius,0,TWO_PI);
+                        ctx.stroke();
+                    }
+                })
                 ctx.restore();
-            })
+                //画火花
+                ctx.hit.sparks.forEach(function (spark) {
+                    if(spark.isShow){
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.translate(spark.dx,spark.dy);
+                        var star=new Image();
+                        star.src="./assets/spark.png"
+                        ctx.drawImage(star,0,0,30,30);
+                        ctx.restore();
+                    }
+                })
+            }
         }
     }
     /*登录成功后加载动画*/
@@ -294,7 +311,10 @@
                 this.ndt = 1;
                 this.coins = [];
                 this.rocks = [];
-                this.hits = [];
+                this.hit = {
+                    explodes:[],
+                    sparks:[]
+                };
 
                 this.ships = {};
                 this.ship={};

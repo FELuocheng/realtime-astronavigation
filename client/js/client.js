@@ -1,12 +1,6 @@
-(function () {
-	var d = document,
-	w = window,
-	p = parseInt,
-	dd = d.documentElement,
-	db = d.body,
-	dc = d.compatMode == 'CSS1Compat',
-	dx = dc ? dd: db,
-	ec = encodeURIComponent;
+(function ($) {
+	var docCxt = $(document).compatMode == 'CSS1Compat' ? document.documentElement: document.body;
+	var w=window
 	//游戏服务
 	w.GAME = {
 		id:null,
@@ -29,7 +23,8 @@
 				ctx.coins=o.coins;
                 ctx.rocks=o.rocks;
                 ctx.black_hole=o.black_hole;
-				ctx.hits=o.hits;
+				ctx.hit.explodes=o.explodes;
+                ctx.hit.sparks=o.sparks
 			})
 		},
 		//画完后请求后台数据
@@ -66,15 +61,15 @@
 	}
 	//聊天服务
 	w.CHAT = {
-		msgObj:d.getElementById("message"),
+		msgObj:$('#message'),
 
-		screenheight:w.innerHeight ? w.innerHeight : dx.clientHeight,
+		screenheight:w.innerHeight ? w.innerHeight : docCxt.height(),
 		username:null,
 		userid:null,
 		socket:null,
 		//让浏览器滚动条保持在最低部
 		scrollToBottom:function(){
-			this.msgObj.scrollTo(0, this.msgObj.clientHeight);
+			this.msgObj.scrollTop(this.msgObj.height());
 		},
 		//退出，本例只是一个简单的刷新
 		logout:function(){
@@ -83,7 +78,7 @@
 		},
 		//提交聊天消息内容
 		submit:function(){
-			var content = d.getElementById("content").value;
+			var content = $("#content").val();
 			if(content != ''){
 				var obj = {
 					userid: this.userid,
@@ -91,7 +86,7 @@
 					content: content
 				};
 				this.socket.emit('message', obj);
-				d.getElementById("content").value = '';
+				$("#content").val('');
 			}
 			return false;
 		},
@@ -115,7 +110,7 @@
 					separator = '、';
 				}
 		    }
-			d.getElementById("onlinecount").innerHTML = '当前共有 '+onlineCount+' 人在线，在线列表：'+userhtml;
+			$("#onlinecount").html( '当前共有 '+onlineCount+' 人在线，在线列表：'+userhtml);
 
 			//添加系统消息
 			var html = '';
@@ -123,19 +118,19 @@
 			html += user.username;
 			html += (action == 'login') ? ' 加入了聊天室' : ' 退出了聊天室';
 			html += '</div>';
-			var section = d.createElement('section');
-			section.className = 'system J-mjrlinkWrap J-cutMsg';
-			section.innerHTML = html;
-			this.msgObj.appendChild(section);
+			var section = $('<section>');
+			section.addClass( 'system');
+			section.html(html);
+			section.appendTo(this.msgObj);
 			this.scrollToBottom();
 		},
 		//第一个界面用户提交用户名并加入游戏
 		usernameSubmit:function(){
-			var username = d.getElementById("username").value;
+			var username = $("#username").val();
 			if(username != ""){
-				d.getElementById("username").value = '';
-				d.getElementById("loginbox").style.display = 'none';
-				d.getElementById("gamebox").style.display = 'block';
+				$("#username").val('');
+				$("#loginbox").css({'display':'none'});
+				$("#gamebox").css({'display':'block'});
 				this.init(username);
 			}
 			return false;
@@ -148,12 +143,10 @@
 			this.userid = this.genUid();
 			this.username = username;
 
-			d.getElementById("showusername").innerHTML = this.username;
-			//this.msgObj.style.minHeight = (this.screenheight - db.clientHeight + this.msgObj.clientHeight) + "px";
+			$("#showusername").text(this.username);
 			this.scrollToBottom();
 
 			//连接websocket后端服务器
-			// this.socket = io.connect('ws://realtime.plhwin.com');
 			GAME.socket=this.socket = io.connect('http://localhost:3000');
 			//告诉服务器端有用户登录
 			this.socket.emit('login', {userid:this.userid, username:this.username});
@@ -178,32 +171,32 @@
 				var contentDiv = '<div>'+obj.content+'</div>';
 				var usernameDiv = '<span>'+obj.username+'</span>';
 
-				var section = d.createElement('section');
+				var section = $('<section>');
 				if(isme){
-					section.className = 'user';
-					section.innerHTML = contentDiv + usernameDiv;
+					section.addClass('user');
+					section.html(contentDiv + usernameDiv);
 				} else {
-					section.className = 'service';
-					section.innerHTML = usernameDiv + contentDiv;
+					section.addClass('service');
+					section.html( usernameDiv + contentDiv);
 				}
-				CHAT.msgObj.appendChild(section);
+				section.appendTo(CHAT.msgObj)
 				CHAT.scrollToBottom();
 			});
 
 		}
 	};
 	//通过“回车”提交用户名
-	d.getElementById("username").onkeydown = function(e) {
+	$("#username").keydown(function(e) {
 		e = e || event;
 		if (e.keyCode === 13) {
 			CHAT.usernameSubmit();
 		}
-	};
+	});
 	//通过“回车”提交信息
-	d.getElementById("content").onkeydown = function(e) {
+	$("#content").keydown(function(e){
 		e = e || event;
 		if (e.keyCode === 13) {
 			CHAT.submit();
 		}
-	};
-})();
+	});
+})("function" == typeof jQuery?jQuery:{fn:{}});

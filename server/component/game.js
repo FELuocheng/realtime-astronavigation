@@ -32,8 +32,6 @@ var Context=(function () {
         this.hits = [];
         //黑洞
         this.black_holes = [new BlackHole(2000,2000,true),new BlackHole(4000,4000,false)];
-        // this.font = 'bold 14px arial';
-        // this.textAlign = 'center';
         var self = this;
         setInterval(function() {
             if(self.coins.length<1000)self.coins.push(new Coin(utils.random(0,self.width), utils.random(0,self.height),Math.floor(utils.random(1, 100))));
@@ -91,11 +89,21 @@ var Context=(function () {
             while (i--){
                 self.black_holes[i].update(self);
             }
+            i=self.hits.length;
+            while(i--){
+                let hit=self.hits[i];
+                if(hit.isShow)hit.update()
+                else self.hits.splice(i,1)
+            }
             for(var s in self.ships){
                 var ship=self.ships[s];
                 if(ship.msgTime!=0&&(new Date-ship.msgTime)>=ship.msgLife){
                     ship.msg=null;
                     ship.msgTime=0;
+                }
+                if(ship.hit_begin_time!=0&&(new Date-ship.hit_begin_time)>=ship.hit_eff_time){
+                    ship.hit=false;
+                    ship.hit_begin_time=0;
                 }
             }
         },16.6)
@@ -118,7 +126,9 @@ var Camera = (function () {
         //镜头中的黑洞
         this.black_hole = {}
         //撞击点
-        this.hits=[]
+        // this.hits=[]
+        this.explodes=[]
+        this.sparks=[]
     }
     //自己的火箭初始位于镜头的中央
     Camera.prototype.initCenterShip = function (username) {
@@ -159,7 +169,15 @@ var Camera = (function () {
         hits=ctx.hits;
         hits.forEach(function (hit) {
             if(hit.x+hit.radius >left && hit.x-hit.radius<right && hit.y+hit.radius>top && hit.y-hit.radius<bottom){
-                self.hits.push(utils.locateInCamera(self,hit))
+                //定位撞击点
+                // self.hits.push(utils.locateInCamera(self,hit))
+                //定位爆炸
+                self.explodes.push(utils.locateInCamera(self,hit.explode))
+                //定位火花
+                var i=hit.sparks.length
+                while(i--){
+                    self.sparks.push(utils.locateInCamera(self,hit.sparks[i]))
+                }
             }
         })
     }
@@ -170,6 +188,8 @@ var Rock =  (function () {
     function Rock(x,y,level) {
         this.x=x;
         this.y=y;
+        this.vx=0;
+        this.vy=0;
         this.level=level;
         this.width=rock_imgs.get(level).width;
         this.height=rock_imgs.get(level).height;
@@ -182,12 +202,21 @@ var Rock =  (function () {
         for(let sh in ctx.ships){
             let ship=ctx.ships[sh];
             let hit_point=utils.hitTestRectArc(ship,this);
-            if (!this.hit&&hit_point) {
+            if (!this.hit&&!ship.hit&&hit_point) {
                 // this.hit=true;
                 ship.hit=true;
-                ctx.hits.push(new Hit(hit_point[0],hit_point[1]));
+                ship.hit_begin_time =+ new Date
+                //产生撞击点
+                ctx.hits.push(new Hit(hit_point[0],hit_point[1],300));
+                //陨石运动
+                this.vx=ship.vx;
+                this.vy=ship.vy;
             }
         }
+        this.x+=this.vx;
+        this.y+=this.vy
+        this.vx*=0.95
+        this.vy*=0.95
     }
     return Rock
 })()
@@ -280,7 +309,6 @@ var BlackHole = (function () {
             mvy = Math.sin(angle);
             power = 1 + (100 / dist);
             if (dist <= self.gravitationRange) {
-                ship.canmove=false;
                 //黑洞吸引
                 if(self.isBlack) {
                     //从白洞中出现
@@ -310,7 +338,6 @@ var BlackHole = (function () {
                 }
             }
             else {
-                if(!(ship.inhole||ship.outhole))ship.canmove=true;
                 if(self.isBlack)ship.inhole=false;
                 else ship.outhole=false;
             }
@@ -424,6 +451,11 @@ var Ship = (function() {
         this.health=100;
         //碰撞
         this.hit=false;
+        //碰撞效果持续时间
+        this.hit_eff_time=2000;
+        this.hit_begin_time=0;
+        //碰撞倒退
+        this.forward=1;
         //被黑洞吸引
         this.inhole=false;
         //被白洞排斥
@@ -439,6 +471,8 @@ var Ship = (function() {
     }
 
     Ship.prototype.update = function(data,ctx) {
+        //如果没被撞，也没在黑洞里就可以移动
+        this.canmove=(!this.hit)&&(!this.inhole)&&(!this.outhole)
         if(this.canmove) {
             var ax, ay;
 
@@ -461,16 +495,27 @@ var Ship = (function() {
         else {
             this.thrust = 0;
         }
+
+        if(this.hit){
+            this.forward=-0.35
+        }
+        else {
+            if(this.forward<0){
+                this.vx=0;
+                this.vy=0;
+            }
+            this.forward=1
+        }
         var p=this.profit;
         this.level=(p<2000)&&1||(p>=2000&&p<5000)&&2||(p>=5000&&p<10000)&&3||(p>=10000)&&4
         ax = Math.cos(this.rotation) * this.thrust;
         ay = Math.sin(this.rotation) * this.thrust;
         this.vx += ax;
         this.vy += ay;
-        this.vx *= 0.99;
-        this.vy *= 0.99;
-        this.x += this.vx * ctx.ndt;
-        this.y += this.vy * ctx.ndt;
+        this.vx *= 0.99 ;
+        this.vy *= 0.99 ;
+        this.x += this.vx * ctx.ndt * this.forward;
+        this.y += this.vy * ctx.ndt * this.forward;
         //如果到达边界
         this.x=utils.between(this.x,10,ctx.width - this.bWidth);
         this.y=utils.between(this.y,28,ctx.height - this.bHeight);
@@ -492,28 +537,67 @@ var Ship = (function() {
 
     return Ship;
 })();
-//聊天信息
-var msg=(function () {
-
-})()
 //撞击点
 var Hit=(function(){
-    //火花效果
-    function Spark(x,y){
-
+    //火花溅射效果
+    function Spark(x,y,radius){
+        this.x=x
+        this.y=y
+        this.move_angle=utils.random(0,Math.PI*2)
+        this.move_range=utils.random(20,radius)
+        this.move_dist=0
+        this.v=6;
+        this.isShow=!0;
     }
-    //爆炸效果
-    function Explode(x,y){
-
+    Spark.prototype.update=function () {
+        if(this.move_dist<this.move_range){
+            this.move_dist+=this.v
+            this.x+=Math.cos(this.move_angle)*this.v
+            this.y+=Math.sin(this.move_angle)*this.v
+        }
+        else {
+            this.isShow=!1;
+        }
     }
-    function Hit(x,y){
+    //爆炸冲击波效果
+    function Explode(x,y,range){
+        this.x=x
+        this.y=y
+        this.range=range;
+        this.radius=0;
+        this.v=10;
+        this.isShow=!0;
+    }
+    Explode.prototype.update=function () {
+        if(this.radius<this.range){
+            this.radius+=this.v
+        }else {
+            this.isShow=!1;
+        }
+    }
+    function Hit(x,y,force){
         this.x=x;
         this.y=y;
         //撞击威力和相撞时速度相关
-        this.force=0;
-        this.radius=0;
-        this.spark=new Spark(x,y);
-        this.Explode=new Explode(x,y)
+        this.force=force;
+        this.radius=force;
+        this.isShow=!0;
+        this.sparks=[];
+        var count=10
+        while (count--){
+            this.sparks.push(new Spark(x,y,this.force))
+        }
+        this.explode=new Explode(x,y,this.force)
+    }
+    Hit.prototype.update=function () {
+        this.explode.update();
+        this.isShow=this.explode.isShow;
+        var i = this.sparks.length;
+        while (i--) {
+            let spark=this.sparks[i]
+            spark.update()
+            this.isShow=this.isShow||spark.isShow
+        }
     }
     return Hit;
 })()
