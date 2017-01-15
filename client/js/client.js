@@ -1,5 +1,5 @@
 (function ($) {
-	var docCxt = $(document).compatMode == 'CSS1Compat' ? document.documentElement: document.body;
+	var docCxt = document.compatMode == 'CSS1Compat' ? document.documentElement: document.body;
 	var w=window
 	//游戏服务
 	w.GAME = {
@@ -63,7 +63,7 @@
 	w.CHAT = {
 		msgObj:$('#message'),
 
-		screenheight:w.innerHeight ? w.innerHeight : docCxt.height(),
+		screenheight:w.innerHeight ? w.innerHeight : docCxt.clientHeight,
 		username:null,
 		userid:null,
 		socket:null,
