@@ -61,7 +61,7 @@
                 txt=txts[i];
                 if(txt!=""){
                     //第一行最多能写字数
-                    let ffm=floor((this.maxWidth-offsetX)/this.fontSize)
+                    var ffm=floor((this.maxWidth-offsetX)/this.fontSize)
                     //第一行写不满
                     if(txt.length<ffm){
                         ctx.fillTextNew(txt,offsetX,this.topMargin + this.rowHeight * row, this.maxWidth,txt.length*this.fontSize/2);
@@ -69,12 +69,12 @@
                     }
                     //第一行写得满
                     else {
-                        let ct=0;
+                        var ct=0;
                         var t=txt.substring(0,ct += ffm);
                         ctx.fillTextNew(t,offsetX,this.topMargin + this.rowHeight * row, this.maxWidth, t.length*this.fontSize/2);
                         row++;
-                        let tr=ceil((txt.length-ffm)/maxFont)+row;
-                        for (let r = row; r < tr; r++) {
+                        var tr=ceil((txt.length-ffm)/maxFont)+row;
+                        for (var r = row; r < tr; r++) {
                             //最后一行
                             if(r==tr-1){
                                 t=txt.substr(ct);
@@ -301,7 +301,7 @@
         }
     }
     /*登录成功后加载动画*/
-    G.setup = function() {
+    window.start_game = function() {
         return Sketch.create({
             setup: function() {
                 this.profit=0;
