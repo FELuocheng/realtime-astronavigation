@@ -156,7 +156,7 @@
 				var uid=o.user.userid;
 				if(GAME.id===null&&uid===CHAT.userid){
 					GAME.id=uid;
-					GAME.setup();
+					window.start_game();
 				}
 			});
 
